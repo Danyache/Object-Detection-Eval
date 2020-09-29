@@ -101,14 +101,21 @@ def main(args):
 
     mAR /= len(full_iouts)
     mAP_over /= len(full_iouts)
-    
-    row_list = []
-    
-    row_list.append({'classes':'mAP over iou=[.5-.95]', 'iou_t':f'{mAP_over}'})
-    row_list.append({'classes':'mAR', 'iou_t':f'{mAR}'})
-    row_list.append({})
+
+    columns = ['classes']
+    class_names = []
     
     for iou_t in iou_ts:
+        for col_name in ['AP', 'ACC', 'TP', 'FP', 'total_P', 'Pr', 'Re']:
+            columns.append(f'{col_name}@{int(iou_t*100)}')
+    
+    row_dict = {}
+    
+    loop_idx = 0
+    
+    for iou_t in iou_ts:
+        
+        loop_idx += 1
         
         metricsPerClass = evaluator.GetPascalVOCMetrics(
             all_bboxes,  # Object containing all bounding boxes (ground truths and detections)
@@ -119,21 +126,23 @@ def main(args):
         true_positives = []
         total_positives = []
         false_positives = []
-
+        
         for mc in metricsPerClass:
-            
-            class_dict = {}
-            
-            class_dict['iou_t'] = iou_t
-            
+
             # Get metric values per each class
             c = mc['class']
-            class_dict['classes'] = c
+            
+            if loop_idx == 1:
+                class_names.append(c)
+                row_dict[c] = []
+            
+            # row_dict[c].append(iou_t)
             
             precision = mc['precision']
             recall = mc['recall']
             average_precision = mc['AP']
-            class_dict['AP'] = average_precision
+#             class_dict['AP'] = average_precision
+            row_dict[c].append(average_precision)
             
             ipre = mc['interpolated precision']
             irec = mc['interpolated recall']
@@ -147,26 +156,53 @@ def main(args):
             true_positives.append(TP)
             total_positives.append(total_p)
             false_positives.append(FP)
-
-            class_dict['ACC'] = TP/(FP+total_p)
-            class_dict['TP'] = TP
-            class_dict['FP'] = FP
-            class_dict['total_P'] = total_p
+            
+            row_dict[c].append(TP/(FP+total_p))
+            row_dict[c].append(TP)
+            row_dict[c].append(FP)
+            row_dict[c].append(total_p)
             
             if TP+FP>0:
-                class_dict['Pr'] = TP/(TP+FP)
+                row_dict[c].append(TP/(TP+FP))
             else:
-                class_dict['Pr'] = 0
+                row_dict[c].append(0)
                 
-            class_dict['Re'] = TP/total_p
-            
-            row_list.append(class_dict)
+            row_dict[c].append(TP/total_p)
         
-        row_list.append({'classes':'mAP', 'iou_t':iou_t, 'AP':np.array(average_precisions).mean()})
-        row_list.append({'classes':'Mean ACC', 'iou_t':iou_t, 'AP':np.array(true_positives).sum() / (np.array(total_positives).sum() + np.array(false_positives).sum())})
-        row_list.append({})
+        if loop_idx == 1:
+            row_dict['mAP'] = []
+            row_dict['Mean ACC'] = []
         
-    res_df = pd.DataFrame(row_list[:-1], columns=['classes', 'iou_t', 'AP', 'ACC', 'TP', 'FP', 'total_P', 'Re', 'Pr'])
+        row_dict['mAP'].append(np.array(average_precisions).mean())
+        row_dict['Mean ACC'].append(np.array(true_positives).sum() / (np.array(total_positives).sum() + np.array(false_positives).sum()))
+        
+    
+    row_list = []
+    for c in class_names:
+        c_arr = row_dict[c]
+        c_arr.insert(0, c)
+        row_list.append(c_arr)
+        
+    row_list.append([])
+    
+    mAP_list = row_dict['mAP']
+    mACC_list = row_dict['Mean ACC']
+    
+    mAP_list.insert(0, 'mAP')
+    mACC_list.insert(0, 'Mean ACC')
+    
+    iou_list = [iou_t for iou_t in iou_ts]
+    iou_list.insert(0, 'IOU_t')
+    
+    row_list.append(iou_list)
+    row_list.append(mAP_list)
+    row_list.append(mACC_list)
+    
+    row_list.append([])
+    row_list.append(['mAP over iou=[.5-.95]', mAP_over])
+    row_list.append(['mAR', mAR])
+        
+    res_df = pd.DataFrame(row_list, columns=columns)
     
     res_df.to_csv(output_file, index=False)
 
