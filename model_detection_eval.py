@@ -90,7 +90,10 @@ def main(args):
         method=MethodAveragePrecision.EveryPointInterpolation)
 
         for mc in metricsPerClass:
-            recalls.append(mc['recall'][-1])
+            try:
+                recalls.append(mc['recall'][-1])
+            except:
+                recalls.append(0)
             maps.append(mc['AP'])
 
         mAR += np.array(recalls).mean()
@@ -149,7 +152,12 @@ def main(args):
             class_dict['TP'] = TP
             class_dict['FP'] = FP
             class_dict['total_P'] = total_p
-            class_dict['Pr'] = TP/(TP+FP)
+            
+            if TP+FP>0:
+                class_dict['Pr'] = TP/(TP+FP)
+            else:
+                class_dict['Pr'] = 0
+                
             class_dict['Re'] = TP/total_p
             
             row_list.append(class_dict)
