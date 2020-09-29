@@ -209,7 +209,7 @@ def main(args):
 if __name__=='__main__':
 	"""
 	Пример ввода:
-	python model_detection_eval.py -gt_path val_small_40_classes.json -pred_path coco_instances_results.json -output_path output3.txt -t "0.5 0.6 0.9"
+	python model_detection_eval.py -gt_path val_small_40_classes.json -pred_path coco_instances_results.json -output_path output3.csv -t "0.5 0.6 0.9"
 	"""
 
 	parser = argparse.ArgumentParser(prog='Object Detection Metrics', description="some metrics")
