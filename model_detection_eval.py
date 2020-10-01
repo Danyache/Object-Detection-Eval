@@ -102,11 +102,11 @@ def main(args):
     mAR /= len(full_iouts)
     mAP_over /= len(full_iouts)
 
-    columns = ['classes']
+    columns = ['classes', 'total_P']
     class_names = []
     
     for iou_t in iou_ts:
-        for col_name in ['AP', 'ACC', 'TP', 'FP', 'total_P', 'Pr', 'Re']:
+        for col_name in ['AP', 'ACC', 'TP', 'FP', 'Pr', 'Re']:
             columns.append(f'{col_name}@{int(iou_t*100)}')
     
     row_dict = {}
@@ -142,7 +142,6 @@ def main(args):
             recall = mc['recall']
             average_precision = mc['AP']
 #             class_dict['AP'] = average_precision
-            row_dict[c].append(average_precision)
             
             ipre = mc['interpolated precision']
             irec = mc['interpolated recall']
@@ -157,10 +156,14 @@ def main(args):
             total_positives.append(total_p)
             false_positives.append(FP)
             
+            if loop_idx == 1:
+                row_dict[c].append(total_p)
+                
+            row_dict[c].append(average_precision)
             row_dict[c].append(TP/(FP+total_p+1e-5))
             row_dict[c].append(TP)
             row_dict[c].append(FP)
-            row_dict[c].append(total_p)
+            # row_dict[c].append(total_p)
             
             if TP+FP>0:
                 row_dict[c].append(TP/(TP+FP))
