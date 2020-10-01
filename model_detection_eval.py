@@ -157,7 +157,7 @@ def main(args):
             total_positives.append(total_p)
             false_positives.append(FP)
             
-            row_dict[c].append(TP/(FP+total_p))
+            row_dict[c].append(TP/(FP+total_p+1e-5))
             row_dict[c].append(TP)
             row_dict[c].append(FP)
             row_dict[c].append(total_p)
@@ -167,14 +167,14 @@ def main(args):
             else:
                 row_dict[c].append(0)
                 
-            row_dict[c].append(TP/total_p)
+            row_dict[c].append(TP/(total_p+1e-5))
         
         if loop_idx == 1:
             row_dict['mAP'] = []
             row_dict['Mean ACC'] = []
         
         row_dict['mAP'].append(np.array(average_precisions).mean())
-        row_dict['Mean ACC'].append(np.array(true_positives).sum() / (np.array(total_positives).sum() + np.array(false_positives).sum()))
+        row_dict['Mean ACC'].append(np.array(true_positives).sum() / (np.array(total_positives).sum() + np.array(false_positives).sum()+1e-5))
         
     
     row_list = []
